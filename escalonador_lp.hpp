@@ -23,13 +23,6 @@ public:
             Processo *p = novo_queue->pop(); 
             RAM& ram = RAM::get();
 
-
-            if (ram.get_free_ram() < p->get_size()) {
-                /*
-                codigo pedindo pro escalonador de medio prazo fazer o trabalho dele
-                */
-                
-            }
             if (ram.alloc(p)) {
                 ProcessState estado = p->get_state();
                 if (estado != ProcessState::NOVO) {
@@ -47,6 +40,9 @@ public:
                 }
                 return true;
             }
+            /*
+                codigo pedindo pro escalonador de medio prazo fazer o trabalho dele
+            */
             //alocação falhou, e ai? volta pro inicio ou vai pro final da fila?
             novo_queue->push(p);
             return false;
