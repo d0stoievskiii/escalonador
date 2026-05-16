@@ -100,3 +100,8 @@ size_t Processo::get_size() {
 	return mbs_ram;
 }
 
+
+uint32_t Processo::set_arrival_time(uint32_t time) {
+	arrival_time = time;
+	return arrival_time;
+}

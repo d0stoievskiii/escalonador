@@ -6,7 +6,7 @@
 class ProcessQueue
 {
 private:
-    std::vector<Processo> processos;
+    std::vector<Processo*> processos;
     uint32_t count;
 
 public:
@@ -22,14 +22,14 @@ public:
         return processos.empty();
     }
 
-    Processo pop() {
-        Processo p = processos.front();
+    Processo* pop() {
+        Processo* p = processos.front();
         processos.erase(processos.begin());
         count--;
         return p;
     }
 
-    void push(Processo p) {
+    void push(Processo* p) {
         processos.emplace_back(p);
         count++;
     }

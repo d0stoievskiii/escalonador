@@ -116,4 +116,6 @@ public:
     uint32_t get_pid();
 
     size_t get_size();
+
+    uint32_t set_arrival_time(uint32_t time);
 };

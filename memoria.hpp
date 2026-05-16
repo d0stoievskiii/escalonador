@@ -1,13 +1,14 @@
 #pragma once
 
 #include "processo.hpp"
+#include "systemclock.hpp"
 #include <vector>
 
 #define SIZE 32000
 
 typedef unsigned int MB;
 
-class RAM
+class RAM : public Singleton<RAM>
 {
 private:
     MB physical_mem[SIZE];
