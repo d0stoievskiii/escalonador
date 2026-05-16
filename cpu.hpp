@@ -1,6 +1,7 @@
 #pragma once
-#include "processo.hpp"
+
 #include <stdexcept>
+#include "interrupt.hpp"
 
 class CPU
 {
