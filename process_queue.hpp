@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+
 #include "processo.hpp"
 
 class ProcessQueue
@@ -33,4 +34,31 @@ public:
         processos.emplace_back(p);
         count++;
     }
+
+    int index(uint32_t pid) {
+        int id = 0;
+        for (const auto p : processos) {
+            if (p->get_pid() == pid) {
+                return id;
+            }
+            id++;
+        }
+        return -1;
+    }
+
+    Processo* operator[](int index) {
+        return processos[index];
+    }
+
+    bool remove(uint32_t pid) {
+        int id = index(pid);
+        if (id == -1) {
+            return false;
+        }
+
+        processos.erase(processos.begin() + id);
+        return true;
+    }
+
+
 };

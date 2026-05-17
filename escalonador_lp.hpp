@@ -27,7 +27,7 @@ public:
                 ProcessState estado = p->get_state();
                 if (estado != ProcessState::NOVO) {
                     throw std::runtime_error("Estado de processo inesperado! [" + StateFlagsToString(estado) + 
-                    "] processID: [" + std::to_string(p->get_pid()) + "]");
+                    "] processID: [" + std::to_string(p->get_pid()) + "] @ EscalonadorLP");
                 }
                 p->set_state(ProcessState::PRONTO);
                 p->img = ram._image_by_pid(p->get_pid());
@@ -45,7 +45,6 @@ public:
             */
             //alocação falhou, e ai? volta pro inicio ou vai pro final da fila?
             novo_queue->push(p);
-            return false;
         }
         
         return false;

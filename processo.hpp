@@ -40,8 +40,8 @@ std::string StateFlagsToString(uint32_t flags);
 
 typedef struct PROCESS_IMAGE {
     uint32_t pid;
-    uint32_t start_address;
-    uint32_t end_address;
+    int32_t start_address;
+    int32_t end_address;
 } Imagem;
 
 typedef struct PROCESS_METRICS {
