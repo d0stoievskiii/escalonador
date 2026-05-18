@@ -93,7 +93,7 @@ public:
 
     bool swap_out(size_t size) {
         /*
-        EscalonadorLP quer dar CP pra um processo novo mas nao encontra espaco, chama essa funcao, que decide quem tirar
+        EscalonadorLP quer dar CPU(tornar pronto) um processo novo mas nao encontra espaco, chama essa funcao, que decide quem tirar
         da MP. Se não conseguir resolver o problema retorna falso
         */
        return true;
