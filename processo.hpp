@@ -77,7 +77,7 @@ public:
     Imagem img;
     
     Processo(uint32_t processid, uint32_t cpu_t_1,
-    uint32_t cpu_t_2, uint32_t io_t, size_t ram) {
+    uint32_t io_t, uint32_t cpu_t_2, size_t ram) {
         pid = processid;
         cpu_time_1 = cpu_t_1;
         cpu_time_2 = cpu_t_2;
