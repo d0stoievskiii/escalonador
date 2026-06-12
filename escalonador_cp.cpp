@@ -25,14 +25,43 @@ private:
                   << " despachado para CPU " << cpu_id << "\n";
     }
  
-    // Retorna apenas o próximo processo, sem precisar adivinhar o índice da fila
     Processo* proximo_pronto() {
+        // 1. Processos de Tempo Real não precisam de disco, vão direto
         if (!sistema.RT_ready_queue.empty()) {
             return sistema.RT_ready_queue.pop();
         }
+
+        // 2. Processos de Usuário precisam de garantir um disco
         for (int i = 0; i < 3; i++) {
-            if (!sistema.user_ready_queues[i].empty()) {
-                return sistema.user_ready_queues[i].pop();
+            ProcessQueue& fila = sistema.user_ready_queues[i];
+            
+            // Espreitamos todos os processos na fila
+            for (int j = 0; j < fila.size(); j++) {
+                Processo* p = fila[j];
+                
+                // Se ainda não tem um disco associado, tentamos alocar um
+                if (p->get_assigned_disk() == -1) {
+                    int disco_livre = -1;
+                    for (int k = 0; k < 4; k++) {
+                        if (!sistema.discos[k].is_reserved()) {
+                            disco_livre = k;
+                            break;
+                        }
+                    }
+                    
+                    if (disco_livre != -1) {
+                        // Sucesso! Tranca o disco, regista no processo e despacha
+                        sistema.discos[disco_livre].reserve();
+                        p->set_assigned_disk(disco_livre);
+                        fila.remove(p->get_pid()); // Tira da fila
+                        return p;
+                    }
+                    // Se não tem disco livre, salta este processo por enquanto e verifica o próximo
+                } else {
+                    // Já tem disco reservado (e.g., já rodou antes), pode ser despachado normalmente
+                    fila.remove(p->get_pid());
+                    return p;
+                }
             }
         }
         return nullptr;
@@ -69,8 +98,12 @@ private:
                 p->set_finish_time(sistema.relogio.time()); 
                 sistema.finished_queue.push(p);
                 log_estado(p, "EXECUTANDO", "FINALIZADO");
-                
+
                 sistema.mem.free_process(p);
+
+                if (p->get_assigned_disk() != -1) {
+                    sistema.discos[p->get_assigned_disk()].free_reservation();
+                }
  
             } else if (res == ExecResult::BLOCKED) {
                 sistema.blocked_queue.push(p);

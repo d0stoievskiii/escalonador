@@ -35,16 +35,25 @@ private:
     IO_REQUEST processing;
     bool busy;
     uint32_t id;
+    bool reserved;
 
 public:
     Disco(uint32_t num_disco) {
         id = num_disco;
         busy = false;
+        reserved = false; // Começa livre
     }
+
+    bool is_reserved() const { return reserved; }
+
+    void reserve() { reserved = true; }
+    
+    void free_reservation() { reserved = false; }
 
     IO_REQUEST request_io(Processo& p, uint32_t duration, uint32_t start);
 
     IOInterrupt* process_io();
+    
     bool isAvailable();
 
 };

@@ -73,6 +73,8 @@ private:
     uint8_t queue_level; // Rastreia a fila de feedback (0, 1 ou 2)
 
     bool io_started; // Controla se o pedido de disco já foi submetido
+
+    int assigned_disk; // Guarda o ID do disco reservado (-1 se não tiver)
     
 public:
 
@@ -98,6 +100,8 @@ public:
         queue_level = 0;
 
         io_started = false;
+
+        assigned_disk = -1;
         
         //pela descrição do trabalho minha interpretação é que se diferencia REALTIME de USER pelo tempo de IO
         //REALTIME nunca tem, user sempre tem(perguntar pra ela)
@@ -138,4 +142,8 @@ public:
     bool get_io_started() const { return io_started; }
 
     void set_io_started(bool b) { io_started = b; }
+
+    int get_assigned_disk() const { return assigned_disk; }
+    
+    void set_assigned_disk(int d) { assigned_disk = d; }
 };

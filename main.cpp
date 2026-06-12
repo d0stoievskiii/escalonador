@@ -95,12 +95,13 @@ int main() {
         for (int i = 0; i < sistema.blocked_queue.size(); i++) {
             Processo* p = sistema.blocked_queue[i];
             
-            // Se ainda não foi enviado para o disco, enviamos agora
             if (!p->get_io_started()) {
-                // Distribuição simples em round-robin usando o PID
-                int disco_escolhido = p->get_pid() % 4;
-                sistema.discos[disco_escolhido].request_io(*p, p->get_io_time(), sistema.relogio.time());
-                p->set_io_started(true);
+                int disco_escolhido = p->get_assigned_disk();
+                // Apenas por segurança, garantimos que tem um disco alocado
+                if (disco_escolhido != -1) {
+                    sistema.discos[disco_escolhido].request_io(*p, p->get_io_time(), sistema.relogio.time());
+                    p->set_io_started(true);
+                }
             }
         }
 
