@@ -7,7 +7,7 @@
 #include "sistema.hpp"
 #include "escalonador_lp.hpp"
 #include "escalonador_mp.hpp"
-#include "escalonador_cp.cpp"
+#include "escalonador_cp.hpp"
 
 // Função para ler o ficheiro de texto e popular a fila de processos novos
 bool carregar_processos_do_arquivo(const std::string& nome_arquivo, ProcessQueue& fila_novos) {
