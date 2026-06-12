@@ -25,13 +25,8 @@ private:
                   << " despachado para CPU " << cpu_id << "\n";
     }
  
-    Processo* proximo_pronto() {
-        // 1. Processos de Tempo Real não precisam de disco, vão direto
-        if (!sistema.RT_ready_queue.empty()) {
-            return sistema.RT_ready_queue.pop();
-        }
-
-        // 2. Processos de Usuário precisam de garantir um disco
+    Processo* proximo_pronto_user() {
+        // Processos de Usuário precisam de garantir um disco
         for (int i = 0; i < 3; i++) {
             ProcessQueue& fila = sistema.user_ready_queues[i];
             
@@ -68,19 +63,69 @@ private:
     }
  
     void despachar() {
+        // 1. Prioridade Absoluta: Processos de Tempo Real (RT)
+        while (!sistema.RT_ready_queue.empty()) {
+            int cpu_alvo = -1;
+
+            // Tenta encontrar uma CPU livre
+            for (int i = 0; i < 4; i++) {
+                if (sistema.processadores[i].ger_running_process() == nullptr) {
+                    cpu_alvo = i;
+                    break;
+                }
+            }
+
+            // Se não há CPU livre, procura uma rodando um processo de Usuário (USER) para preemptar
+            if (cpu_alvo == -1) {
+                for (int i = 0; i < 4; i++) {
+                    Processo* rodando = sistema.processadores[i].ger_running_process();
+                    if (rodando != nullptr && rodando->get_prioridade() == USER) {
+                        cpu_alvo = i;
+                        break;
+                    }
+                }
+            }
+
+            // Se encontrou uma CPU (livre ou preemptada)
+            if (cpu_alvo != -1) {
+                Processo* rodando = sistema.processadores[cpu_alvo].ger_running_process();
+                
+                // Lógica de Preempção
+                if (rodando != nullptr) {
+                    sistema.processadores[cpu_alvo].remove_process();
+                    rodando->set_state(PRONTO);
+                    log_estado(rodando, "EXECUTANDO", "PRONTO (Preempcao RT)");
+                    
+                    // Devolve o usuário para a fila de onde veio (sem rebaixar, pois a culpa não foi do quantum)
+                    sistema.user_ready_queues[rodando->get_queue_level()].push(rodando);
+                }
+
+                // Despacha o RT
+                Processo* p_rt = sistema.RT_ready_queue.pop();
+                p_rt->set_state(EXECUTANDO);
+                log_estado(p_rt, "PRONTO", "EXECUTANDO");
+                log_despacho(p_rt, cpu_alvo);
+                
+                // Manda rodar com quantum 0 (ininterrupto)
+                sistema.processadores[cpu_alvo].run(p_rt, 0); 
+            } else {
+                // Todas as 4 CPUs estão rodando processos RT. Não há quem preemptar.
+                break; 
+            }
+        }
+
+        // 2. Preenche as CPUs que restaram livres com processos de Usuário
         for (int i = 0; i < 4; i++) {
             if (sistema.processadores[i].ger_running_process() != nullptr) continue; 
- 
-            Processo* p = proximo_pronto();
+            
+            Processo* p = proximo_pronto_user();
             if (p == nullptr) break; 
  
             p->set_state(EXECUTANDO);
             log_estado(p, "PRONTO", "EXECUTANDO");
             log_despacho(p, i);
  
-            // Se for USER manda o quantum, se for RT manda 0 (sem preempção)
-            uint32_t q = (p->get_prioridade() == USER) ? QUANTUM : 0;
-            sistema.processadores[i].run(p, q);
+            sistema.processadores[i].run(p, QUANTUM);
         }
     }
  
