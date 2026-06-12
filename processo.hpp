@@ -21,7 +21,7 @@ enum ProcessState : uint32_t
 //pronto suspenso = pronto + suspenso = 2 + 8 = 10
 //bloqueado suspenso = bloqueado + suspenso = 4 + 8 = 12
 
-typedef struct ProcessStateAndString {
+struct ProcessStateAndString {
     ProcessState value;
     std::string_view name;
 };
@@ -71,6 +71,8 @@ private:
     Prioridade prioridade;
 
     uint8_t queue_level; // Rastreia a fila de feedback (0, 1 ou 2)
+
+    bool io_started; // Controla se o pedido de disco já foi submetido
     
 public:
 
@@ -94,6 +96,8 @@ public:
         exec_phase = 1;
 
         queue_level = 0;
+
+        io_started = false;
         
         //pela descrição do trabalho minha interpretação é que se diferencia REALTIME de USER pelo tempo de IO
         //REALTIME nunca tem, user sempre tem(perguntar pra ela)
@@ -128,4 +132,10 @@ public:
     uint8_t get_queue_level() const { return queue_level; }
 
     void set_queue_level(uint8_t lvl) { queue_level = lvl; }
+
+    uint32_t get_io_time() const { return io_time; }
+
+    bool get_io_started() const { return io_started; }
+
+    void set_io_started(bool b) { io_started = b; }
 };

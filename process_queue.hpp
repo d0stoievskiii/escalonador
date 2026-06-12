@@ -57,6 +57,7 @@ public:
         }
 
         processos.erase(processos.begin() + id);
+        count--;
         return true;
     }
 

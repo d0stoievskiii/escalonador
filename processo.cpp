@@ -52,13 +52,16 @@ uint32_t Processo::time_left() {
 
 void Processo::_block_or_end() {
 	if (exec_phase == 1) {
-		if (cpu_time_2 > 0) {
+		// Se tem I/O, bloqueia e avança a fase para quando voltar
+		if (io_time > 0) {
 			exec_phase = 2;
 			estado = BLOQUEADO;
-			/*
-			codigo pra criar evento de E/S
-			*/
 			return;
+		} 
+		// Se não tem I/O mas tem fase 2, continua a executar sem ir aos discos
+		else if (cpu_time_2 > 0) {
+			exec_phase = 2;
+			return; 
 		}
 	}
 	estado = FINALIZADO;
@@ -66,9 +69,9 @@ void Processo::_block_or_end() {
 
 bool Processo::exec() {
 	if (exec_phase == 1) {
-		cpu_time_1--;
+		if (cpu_time_1 > 0) cpu_time_1--;
 	} else {
-		cpu_time_2--;
+		if (cpu_time_2 > 0) cpu_time_2--;
 	}
 
 	if (time_left() == 0) {

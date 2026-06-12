@@ -90,9 +90,42 @@ int main() {
             // Processo entrou na RAM e foi para a fila de prontos
         }
 
-        // 2. Gestão de E/S (Discos) - [Feature 2]
-        // TODO: Percorrer os 4 discos, verificar se terminaram o E/S,
-        // gerar a interrupção e chamar escalonador_curto_prazo.desbloquear(p)
+        // 2. Gestão de E/S (Discos)
+        // a) Distribuir processos bloqueados que ainda não foram para os discos
+        for (int i = 0; i < sistema.blocked_queue.size(); i++) {
+            Processo* p = sistema.blocked_queue[i];
+            
+            // Se ainda não foi enviado para o disco, enviamos agora
+            if (!p->get_io_started()) {
+                // Distribuição simples em round-robin usando o PID
+                int disco_escolhido = p->get_pid() % 4;
+                sistema.discos[disco_escolhido].request_io(*p, p->get_io_time(), sistema.relogio.time());
+                p->set_io_started(true);
+            }
+        }
+
+        // b) Avançar o tempo dos discos e verificar quem terminou
+        for (int i = 0; i < 4; i++) {
+            IOInterrupt* interrupcao = sistema.discos[i].process_io();
+            
+            if (interrupcao != nullptr) {
+                // O disco gerou uma interrupção, o I/O terminou!
+                uint32_t pid_desbloquear = interrupcao->get_pid();
+                
+                // Procurar o processo na fila de bloqueados
+                int idx = sistema.blocked_queue.index(pid_desbloquear);
+                if (idx != -1) {
+                    Processo* p = sistema.blocked_queue[idx];
+                    p->set_io_started(false); // Reinicia a variável
+                    
+                    // O escalonador remove-o da blocked_queue e devolve-o às user_ready_queues
+                    escalonador_curto_prazo.desbloquear(p);
+                }
+                
+                // Libertar a memória alocada dinamicamente pelo disco para evitar leaks
+                delete interrupcao; 
+            }
+        }
 
         // 3. Escalonador de Curto Prazo (Execução e Despacho)
         // Avança o tempo de CPU dos processos que estão rodando e lida com

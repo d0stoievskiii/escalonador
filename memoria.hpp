@@ -3,6 +3,7 @@
 #include "processo.hpp"
 #include "systemclock.hpp"
 #include <vector>
+#include <cstring>
 
 #define SIZE 32000
 
@@ -16,7 +17,7 @@ private:
 
 public:
     RAM() {
-        memset(physical_mem, 0, SIZE);
+        memset(physical_mem, 0, SIZE);  
     }
     uint32_t get_free_ram(uint32_t start=0);
     int _find_free_block(size_t size);

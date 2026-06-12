@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-uint32_t RAM::get_free_ram(uint32_t start = 0) {
+uint32_t RAM::get_free_ram(uint32_t start) {
     uint32_t count = 0;
     for(int i = start; i < SIZE; i++) {
         if (physical_mem[i] == 0) count++;
@@ -17,10 +17,10 @@ int RAM::_find_free_block(size_t size) {
     while (pos < SIZE) {
         if (physical_mem[pos] == 0) {
             length++;
-        } else {
             if (length >= size) {
                 return start;
             }
+        } else {
             start = pos + 1;
             length = 0;
         }
@@ -57,7 +57,13 @@ Imagem& RAM::_image_by_pid(uint32_t pid) {
 }
 
 void RAM::free_process(Processo *p) {
-    auto& img = _image_by_pid(p->get_pid());
-    memset(physical_mem+img.start_address, 0, p->get_size());
-    std::erase(processos, img);
+    uint32_t pid = p->get_pid();
+    
+    for (auto it = processos.begin(); it != processos.end(); ++it) {
+        if (it->pid == pid) {
+            memset(physical_mem + it->start_address, 0, p->get_size());
+            processos.erase(it);
+            break;
+        }
+    }
 }

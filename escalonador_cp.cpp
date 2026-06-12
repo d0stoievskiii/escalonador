@@ -69,6 +69,8 @@ private:
                 p->set_finish_time(sistema.relogio.time()); 
                 sistema.finished_queue.push(p);
                 log_estado(p, "EXECUTANDO", "FINALIZADO");
+                
+                sistema.mem.free_process(p);
  
             } else if (res == ExecResult::BLOCKED) {
                 sistema.blocked_queue.push(p);

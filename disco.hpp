@@ -5,7 +5,7 @@
 #include "systemclock.hpp"
 
 
-typedef struct IO_REQUEST {
+struct IO_REQUEST {
     uint32_t process_id;
     uint32_t start_time;
     uint32_t end_time;
@@ -25,6 +25,7 @@ public:
         return InterruptReason::IO;
     }
 
+    uint32_t get_pid() const { return request.process_id; }
 };
 
 class Disco
