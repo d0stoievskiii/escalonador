@@ -61,13 +61,57 @@ int main() {
     }
 
     // 3. Inicializar os escalonadores
-    EscalonadorLP escalonador_longo_prazo(&sistema.novo_queue, &sistema.RT_ready_queue, sistema.user_ready_queues);
-    EscalonadorMP escalonador_medio_prazo(&sistema.RT_ready_queue, sistema.user_ready_queues, 
+    ProcessQueue* ponteiros_user_queues[3] = {
+        &sistema.user_ready_queues[0], 
+        &sistema.user_ready_queues[1], 
+        &sistema.user_ready_queues[2]
+    };
+
+    EscalonadorLP escalonador_longo_prazo(&sistema.novo_queue, &sistema.RT_ready_queue, ponteiros_user_queues);
+    
+    EscalonadorMP escalonador_medio_prazo(&sistema.RT_ready_queue, ponteiros_user_queues, 
                                           &sistema.ready_suspended_queue, &sistema.blocked_queue, 
                                           &sistema.blocked_suspended_queue);
+    
     EscalonadorCP escalonador_curto_prazo(sistema);
 
-    // TODO: Iniciar o loop de simulação aqui (motor de ticks)
+    // Guardamos o total de processos carregados para saber quando parar
+    int total_processos = sistema.novo_queue.size();
+
+    std::cout << "\n--- Iniciando a Simulacao ---\n";
+
+    // Motor de Ticks
+    while (sistema.finished_queue.size() < total_processos) {
+        
+        // 1. Escalonador de Longo Prazo (Admissão)
+        // Usamos um while para tentar admitir o máximo de processos possível neste tick 
+        // até que a fila esvazie ou a RAM encha.
+        while (escalonador_longo_prazo.init_next_process()) {
+            // Processo entrou na RAM e foi para a fila de prontos
+        }
+
+        // 2. Gestão de E/S (Discos) - [Feature 2]
+        // TODO: Percorrer os 4 discos, verificar se terminaram o E/S,
+        // gerar a interrupção e chamar escalonador_curto_prazo.desbloquear(p)
+
+        // 3. Escalonador de Curto Prazo (Execução e Despacho)
+        // Avança o tempo de CPU dos processos que estão rodando e lida com
+        // interrupções de quantum, finalizações e bloqueios.
+        escalonador_curto_prazo.executar_tick();
+
+        // 4. Escalonador de Médio Prazo (Swapping) - [Feature 4]
+        // TODO: Se houver processos suspensos e RAM livre, ou RAM cheia e processos precisando entrar.
+
+        // 5. Avançar o Relógio do Sistema
+        SystemClock::get()++;
+        
+        escalonador_curto_prazo.imprimir_status();
+    }
+
+    std::cout << "\n--- Simulacao Concluida ---\n";
+    std::cout << "Tempo total decorrido: " << SystemClock::get().time() << " u.t.\n";
+
+    // Chamar um método para iterar sobre a finished_queue e imprimir as métricas (Turnaround, etc)
 
     return 0;
 }
