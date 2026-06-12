@@ -38,7 +38,7 @@ bool RAM::alloc(Processo* p) {
         ret.start_address = start_add;
         ret.end_address = start_add + size;
 
-        memset(physical_mem+start_add, ret.pid, size);
+        std::fill_n(physical_mem + start_add, size, ret.pid);
 
         processos.push_back(ret);
 
@@ -61,7 +61,7 @@ void RAM::free_process(Processo *p) {
     
     for (auto it = processos.begin(); it != processos.end(); ++it) {
         if (it->pid == pid) {
-            memset(physical_mem + it->start_address, 0, p->get_size());
+            std::fill_n(physical_mem + it->start_address, p->get_size(), 0);
             processos.erase(it);
             break;
         }
