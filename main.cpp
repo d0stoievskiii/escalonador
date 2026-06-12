@@ -58,12 +58,17 @@ bool carregar_processos_do_arquivo(const std::string& nome_arquivo, ProcessQueue
     return true;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string ficheiro_entrada = "processos.txt"; // Valor padrão
+
+    if (argc > 1) {
+        ficheiro_entrada = argv[1]; // Obtém o nome do arquivo de entrada da linha de comando
+    }
+    
     // 1. Instanciar o hardware simulado
     Sistema sistema;
 
     // 2. Tentar carregar os processos do ficheiro
-    std::string ficheiro_entrada = "processos.txt";
     if (!carregar_processos_do_arquivo(ficheiro_entrada, sistema.novo_queue)) {
         return 1; // Sai se não encontrar o ficheiro
     }
