@@ -67,11 +67,11 @@ int main() {
         &sistema.user_ready_queues[2]
     };
 
-    EscalonadorLP escalonador_longo_prazo(&sistema.novo_queue, &sistema.RT_ready_queue, ponteiros_user_queues);
-    
     EscalonadorMP escalonador_medio_prazo(&sistema.RT_ready_queue, ponteiros_user_queues, 
                                           &sistema.ready_suspended_queue, &sistema.blocked_queue, 
                                           &sistema.blocked_suspended_queue);
+    
+    EscalonadorLP escalonador_longo_prazo(&sistema.novo_queue, &sistema.RT_ready_queue, ponteiros_user_queues, &escalonador_medio_prazo);
     
     EscalonadorCP escalonador_curto_prazo(sistema);
 
@@ -133,8 +133,8 @@ int main() {
         // interrupções de quantum, finalizações e bloqueios.
         escalonador_curto_prazo.executar_tick();
 
-        // 4. Escalonador de Médio Prazo (Swapping) - [Feature 4]
-        // TODO: Se houver processos suspensos e RAM livre, ou RAM cheia e processos precisando entrar.
+        // 4. Escalonador de Médio Prazo (Swapping)
+        escalonador_medio_prazo.swap_in();
 
         // 5. Avançar o Relógio do Sistema
         SystemClock::get()++;
