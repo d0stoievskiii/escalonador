@@ -37,6 +37,14 @@ bool carregar_processos_do_arquivo(const std::string& nome_arquivo, ProcessQueue
                     if (v1 == ',' && v2 == ',' && v3 == ',' && v4 == ',' && fecha_parenteses == ']') {
                         
                         Processo* novo_proc = new Processo(id, cpu1, io, cpu2, ram);
+                        
+                        // VALIDAÇÃO DA REGRA DE TEMPO REAL: Max 512 MB
+                        if (novo_proc->get_prioridade() == REALTIME && ram > 512) {
+                            std::cerr << "Erro: Processo RT #" << id << " excede o limite de 512 MB.\n";
+                            delete novo_proc;
+                            continue; // Ignora este processo e passa ao próximo
+                        }
+
                         fila_novos.push(novo_proc);
                         processos_carregados++;
                     }
@@ -145,7 +153,23 @@ int main() {
     std::cout << "\n--- Simulacao Concluida ---\n";
     std::cout << "Tempo total decorrido: " << SystemClock::get().time() << " u.t.\n";
 
-    // Chamar um método para iterar sobre a finished_queue e imprimir as métricas (Turnaround, etc)
+    std::cout << "\n--- Metricas Finais ---\n";
+    std::cout << "PID\tChegada\tFim\tServico\tTurnaround\tTurnaround Normalizado\n";
+    
+    while (!sistema.finished_queue.empty()) {
+        Processo* p = sistema.finished_queue.pop();
+        Metrics m = p->generate_metrics();
+        
+        std::cout << m.pid << "\t" 
+                  << m.arrival << "\t" 
+                  << m.end << "\t" 
+                  << m.service_time << "\t" 
+                  << m.turnaround << "\t\t" 
+                  << m.normalized_turnaround << "\n";
+                  
+        // Limpa a alocação dinâmica
+        delete p;
+    }
 
     return 0;
 }
