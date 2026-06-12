@@ -105,3 +105,8 @@ uint32_t Processo::set_arrival_time(uint32_t time) {
 	arrival_time = time;
 	return arrival_time;
 }
+
+uint32_t Processo::set_finish_time(uint32_t time) {
+	finish_time = time;
+	return finish_time;
+}

@@ -69,6 +69,8 @@ private:
 
     ProcessState estado;
     Prioridade prioridade;
+
+    uint8_t queue_level; // Rastreia a fila de feedback (0, 1 ou 2)
     
 public:
 
@@ -90,6 +92,8 @@ public:
         //estado é novo até o escalonador LP entrar em ação
         estado = NOVO;
         exec_phase = 1;
+
+        queue_level = 0;
         
         //pela descrição do trabalho minha interpretação é que se diferencia REALTIME de USER pelo tempo de IO
         //REALTIME nunca tem, user sempre tem(perguntar pra ela)
@@ -118,4 +122,10 @@ public:
     size_t get_size();
 
     uint32_t set_arrival_time(uint32_t time);
+
+    uint32_t set_finish_time(uint32_t time);
+
+    uint8_t get_queue_level() const { return queue_level; }
+
+    void set_queue_level(uint8_t lvl) { queue_level = lvl; }
 };

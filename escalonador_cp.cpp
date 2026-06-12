@@ -1,0 +1,121 @@
+#pragma once
+ 
+#include "sistema.hpp"
+#include "processo.hpp"
+#include "process_queue.hpp"
+#include "systemclock.hpp"
+#include <iostream>
+ 
+static constexpr uint32_t QUANTUM = 2;
+ 
+class EscalonadorCP
+{
+private:
+    Sistema& sistema;
+ 
+    void log_estado(Processo* p, const std::string& de, const std::string& para) {
+        std::cout << "[t=" << sistema.relogio.time() << "] "
+                  << "Processo #" << p->get_pid()
+                  << ": " << de << " -> " << para << "\n";
+    }
+ 
+    void log_despacho(Processo* p, uint32_t cpu_id) {
+        std::cout << "[t=" << sistema.relogio.time() << "] "
+                  << "Processo #" << p->get_pid()
+                  << " despachado para CPU " << cpu_id << "\n";
+    }
+ 
+    // Retorna apenas o próximo processo, sem precisar adivinhar o índice da fila
+    Processo* proximo_pronto() {
+        if (!sistema.RT_ready_queue.empty()) {
+            return sistema.RT_ready_queue.pop();
+        }
+        for (int i = 0; i < 3; i++) {
+            if (!sistema.user_ready_queues[i].empty()) {
+                return sistema.user_ready_queues[i].pop();
+            }
+        }
+        return nullptr;
+    }
+ 
+    void despachar() {
+        for (int i = 0; i < 4; i++) {
+            if (sistema.processadores[i].ger_running_process() != nullptr) continue; 
+ 
+            Processo* p = proximo_pronto();
+            if (p == nullptr) break; 
+ 
+            p->set_state(EXECUTANDO);
+            log_estado(p, "PRONTO", "EXECUTANDO");
+            log_despacho(p, i);
+ 
+            // Se for USER manda o quantum, se for RT manda 0 (sem preempção)
+            uint32_t q = (p->get_prioridade() == USER) ? QUANTUM : 0;
+            sistema.processadores[i].run(p, q);
+        }
+    }
+ 
+    void tick() {
+        for (int i = 0; i < 4; i++) {
+            ExecResult res = sistema.processadores[i].exec();
+            
+            // Se estiver ociosa ou rodando normalmente, não faz nada
+            if (res == ExecResult::IDLE || res == ExecResult::RUNNING) continue;
+ 
+            // Caso contrário, algo aconteceu e precisamos retirar o processo da CPU
+            Processo* p = sistema.processadores[i].remove_process();
+ 
+            if (res == ExecResult::FINISHED) {
+                p->set_finish_time(sistema.relogio.time()); 
+                sistema.finished_queue.push(p);
+                log_estado(p, "EXECUTANDO", "FINALIZADO");
+ 
+            } else if (res == ExecResult::BLOCKED) {
+                sistema.blocked_queue.push(p);
+                log_estado(p, "EXECUTANDO", "BLOQUEADO");
+ 
+            } else if (res == ExecResult::QUANTUM_EXPIRED) {
+                p->set_state(PRONTO);
+                log_estado(p, "EXECUTANDO", "PRONTO");
+                
+                // Lógica do rebaixamento
+                uint8_t lvl = p->get_queue_level();
+                if (lvl < 2) {
+                    p->set_queue_level(lvl + 1);
+                }
+                
+                sistema.user_ready_queues[p->get_queue_level()].push(p);
+                std::cout << "[t=" << sistema.relogio.time() << "] "
+                          << "Processo #" << p->get_pid()
+                          << " rebaixado para fila de usuario " << (int)p->get_queue_level() << "\n";
+            }
+        }
+    }
+ 
+public:
+    explicit EscalonadorCP(Sistema& s) : sistema(s) {}
+ 
+    void executar_tick() {
+        tick();
+        despachar();
+    }
+ 
+    void desbloquear(Processo* p) {
+        sistema.blocked_queue.remove(p->get_pid());
+        p->set_state(PRONTO);
+        log_estado(p, "BLOQUEADO", "PRONTO");
+        
+        // Retorna para a fila que ele salvou na própria classe Processo
+        sistema.user_ready_queues[p->get_queue_level()].push(p);
+    }
+ 
+    void imprimir_status() const {
+        std::cout << "\n--- Status do Sistema [t=" << sistema.relogio.time() << "] ---\n";
+        for (int i = 0; i < 4; i++) {
+            Processo* p = sistema.processadores[i].ger_running_process();
+            std::cout << "  CPU " << i << ": " << (p ? "Processo #" + std::to_string(p->get_pid()) : "livre") << "\n";
+        }
+        std::cout << "  Bloqueados    : " << sistema.blocked_queue.size()      << "\n";
+        std::cout << "  Finalizados   : " << sistema.finished_queue.size()     << "\n\n";
+    }
+};

@@ -8,7 +8,7 @@
 
 class Sistema
 {
-private:
+public:
     SystemClock& relogio;
     RAM mem;
     Disco discos[4];
