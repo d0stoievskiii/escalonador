@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <iostream>
 
 #include "memoria.hpp"
 #include "systemclock.hpp"
@@ -29,6 +30,14 @@ public:
                     throw std::runtime_error("Estado de processo inesperado! [" + StateFlagsToString(estado) + 
                     "] processID: [" + std::to_string(p->get_pid()) + "] @ EscalonadorLP");
                 }
+
+                std::cout << "[t=" << SystemClock::get().time() << "] Criando Processo #" << p->get_pid() 
+                          << " (RAM: " << p->get_size() << " MB, Tipo: " 
+                          << (p->get_prioridade() == Prioridade::REALTIME ? "REALTIME" : "USER") << ")\n";
+
+                std::cout << "[t=" << SystemClock::get().time() << "] Processo #" << p->get_pid() 
+                          << ": NOVO -> PRONTO\n";
+
                 p->set_state(ProcessState::PRONTO);
                 p->img = ram._image_by_pid(p->get_pid());
                 p->set_arrival_time(SystemClock::get().time());
