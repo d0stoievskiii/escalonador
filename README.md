@@ -46,3 +46,10 @@ Certifique-se de ter o compilador g++ instalado com suporte a C++17 ou superior.
     ```
     ./simulador
     ```
+### Uso com Arquivo Personalizado
+
+Você pode especificar um arquivo de entrada diferente ao executar o programa passando o nome do arquivo como primeiro argumento:
+
+```sh
+./simulador caminho/para/seu_arquivo.txt
+```
