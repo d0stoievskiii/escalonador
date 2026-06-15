@@ -1,0 +1,5 @@
+simulador
+processos.txt
+__pycache__
+*.pyc
+.git

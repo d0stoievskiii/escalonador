@@ -14,7 +14,15 @@ O simulador lê um arquivo de texto chamado `processos.txt`. Cada processo deve 
 [<id Processo>, <duração de CPU fase 1>, <Duração de I/O>, <duração de CPU fase 2>, <#Mbytes de RAM>]
 ```
 
-## Como Compilar e Rodar (Linux)
+## Como Compilar e Rodar (Com interface gráfica via Docker)
+
+execute
+```bash
+docker run -p 8080:8080 tucoerthal/escalonador:latest
+```
+e depois acesse `http://localhost:8080/`
+
+## Como Compilar e Rodar (Linha de comando apenas, Linux)
 
 Certifique-se de ter o compilador g++ instalado com suporte a C++17 ou superior.
 
